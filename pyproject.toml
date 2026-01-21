@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lgtv-cli"
+version = "0.1.0"
+description = "Command-line tool for controlling LG WebOS Smart TVs"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "LG TV CLI Contributors"}
+]
+keywords = ["lg", "webos", "tv", "smart-tv", "remote", "control", "cli", "home-automation", "iot"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pywebostv>=0.8.9",
+    "click>=8.0",
+    "zeroconf>=0.39",
+    "wakeonlan>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "flake8>=6.0",
+]
+
+[project.scripts]
+lgtv = "lgtv.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/lgtvcli"
+Repository = "https://github.com/yourusername/lgtvcli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lgtv*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
