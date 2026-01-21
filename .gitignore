@@ -20,6 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# PyPI
+.pypirc
+
 # Virtual environments
 venv/
 ENV/
@@ -65,3 +68,4 @@ config.json
 API_COVERAGE.md
 CHANGELOG.md
 GITHUB_CHECKLIST.md
+RELEASE.md
