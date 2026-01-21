@@ -19,29 +19,30 @@ Control your LG WebOS TV from the command line. A comprehensive CLI tool for man
 
 ## Installation
 
-### Option 1: Install from Source (Recommended)
+### Install from PyPI (Recommended)
+
+```bash
+pip install lgtv-cli
+```
+
+Or using pipx for isolated installation:
+```bash
+pipx install lgtv-cli
+```
+
+### Install from Source
+
+For development or latest unreleased changes:
 
 ```bash
 git clone https://github.com/01dnot/lgtvcli.git
 cd lgtvcli
-pip install .
-```
-
-For development:
-```bash
 pip install -e .
 ```
 
-### Option 2: Direct Installation
-
+Or install directly from GitHub:
 ```bash
 pip install git+https://github.com/01dnot/lgtvcli.git
-```
-
-### Option 3: Using pipx (Isolated Installation)
-
-```bash
-pipx install git+https://github.com/01dnot/lgtvcli.git
 ```
 
 ### Requirements
