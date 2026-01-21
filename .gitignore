@@ -60,3 +60,8 @@ config.json
 
 # Claude Code
 .claude/
+
+# Project notes (not for public repo)
+API_COVERAGE.md
+CHANGELOG.md
+GITHUB_CHECKLIST.md

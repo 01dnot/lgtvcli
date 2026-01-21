@@ -43,8 +43,8 @@ dev = [
 lgtv = "lgtv.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/lgtvcli"
-Repository = "https://github.com/yourusername/lgtvcli"
+Homepage = "https://github.com/01dnot/lgtvcli"
+Repository = "https://github.com/01dnot/lgtvcli"
 
 [tool.setuptools.packages.find]
 where = ["."]
