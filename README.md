@@ -1,4 +1,9 @@
 # LG TV CLI
+
+[![Tests](https://github.com/01dnot/lgtvcli/actions/workflows/test.yml/badge.svg)](https://github.com/01dnot/lgtvcli/actions/workflows/test.yml)
+[![PyPI version](https://badge.fury.io/py/lgtv-cli.svg)](https://pypi.org/project/lgtv-cli/)
+[![Python versions](https://img.shields.io/pypi/pyversions/lgtv-cli.svg)](https://pypi.org/project/lgtv-cli/)
+
 <img width="1536" height="1024" alt="Retro-futuristic LG TV CLI promo" src="https://github.com/user-attachments/assets/985696bc-83e0-4b23-9827-da933406d380" />
 
 Control your LG WebOS TV from the command line. A comprehensive CLI tool for managing LG Smart TVs with WebOS, built with Python and PyWebOSTV.
