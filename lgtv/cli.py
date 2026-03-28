@@ -4,20 +4,28 @@ import click
 from .config import Config
 from .tv import TVController, TVConnectionError, TVAuthenticationError
 from .discovery import discover_tvs
-from .utils import error, success, info, warning, wake_on_lan
-from . import commands
+from .logging import setup_logging, get_logger
+from .utils import error, success, info as info_msg, warning
 
 
 # Global options that can be passed to all commands
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
+# Module logger
+log = get_logger("cli")
+
 
 @click.group(invoke_without_command=True)
 @click.version_option()
+@click.option("--debug", is_flag=True, help="Enable debug logging")
 @click.pass_context
-def main(ctx):
+def main(ctx, debug):
     """LG TV CLI - Control your LG WebOS TV from the command line."""
+    # Initialize logging
+    setup_logging(debug=debug)
+
     ctx.obj = Config()
+    log.debug("Config loaded from %s", ctx.obj.config_path)
 
     # Show help if no command is provided
     if ctx.invoked_subcommand is None:
@@ -60,7 +68,7 @@ def config_list(config_obj):
     default = config_obj.get_default_tv()
 
     if not tvs:
-        info("No TVs configured. Use 'lgtv pair <ip>' to add a TV.")
+        info_msg("No TVs configured. Use 'lgtv pair <ip>' to add a TV.")
         return
 
     click.echo("Configured TVs:")
@@ -160,7 +168,7 @@ def pair(config_obj, ip, name):
             # Note: PyWebOSTV doesn't directly expose MAC, would need additional SSAP call
             # For now, we'll leave it None and user can add it manually if needed for WoL
 
-        except:
+        except Exception:
             model = None
             mac = None
 

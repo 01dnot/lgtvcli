@@ -89,7 +89,7 @@ def current(config_obj, tv, ip):
                         title = getattr(app_info, "title", getattr(app_info, "appId", "Unknown"))
                         app_id = getattr(app_info, "appId", getattr(app_info, "id", ""))
                     click.echo(f"Application: {title} ({app_id})")
-            except:
+            except Exception:
                 click.echo("Application: Unable to retrieve")
 
             # Current channel (if in TV mode)
@@ -99,7 +99,7 @@ def current(config_obj, tv, ip):
                     ch_num = channel.get("channelNumber", "?")
                     ch_name = channel.get("channelName", "Unknown")
                     click.echo(f"Channel: {ch_num} - {ch_name}")
-            except:
+            except Exception:
                 pass
 
             # Volume
@@ -131,7 +131,7 @@ def current(config_obj, tv, ip):
 
                     muted_text = " (MUTED)" if muted else ""
                     click.echo(f"Volume: {volume}{muted_text}")
-            except:
+            except Exception:
                 pass
 
             # Audio output
@@ -148,7 +148,7 @@ def current(config_obj, tv, ip):
                     else:
                         output = str(audio)
                     click.echo(f"Audio Output: {output}")
-            except:
+            except Exception:
                 pass
 
     except TVConnectionError as e:

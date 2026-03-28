@@ -3,7 +3,7 @@
 import click
 from ..config import Config
 from ..tv import TVController, TVConnectionError, TVAuthenticationError
-from ..utils import error, success, info, warning
+from ..utils import error, success, info
 
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -92,7 +92,7 @@ def channel_up(config_obj, tv, ip):
                     channel_num = current.get("channelNumber", "")
                     if channel_name or channel_num:
                         info(f"Current: {channel_num} - {channel_name}")
-            except:
+            except Exception:
                 pass
 
     except TVConnectionError as e:
@@ -122,7 +122,7 @@ def channel_down(config_obj, tv, ip):
                     channel_num = current.get("channelNumber", "")
                     if channel_name or channel_num:
                         info(f"Current: {channel_num} - {channel_name}")
-            except:
+            except Exception:
                 pass
 
     except TVConnectionError as e:
@@ -231,7 +231,7 @@ def channel_info(config_obj, tv, ip):
                         click.echo(f"  Start: {program['startTime']}")
                     if program.get("endTime"):
                         click.echo(f"  End: {program['endTime']}")
-            except:
+            except Exception:
                 pass
 
     except TVConnectionError as e:

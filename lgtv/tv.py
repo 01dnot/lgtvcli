@@ -1,9 +1,11 @@
 """TV connection wrapper for PyWebOSTV."""
 
-import time
-from typing import Optional, Dict, Any
-from pywebostv.discovery import discover
+from typing import Optional
 from pywebostv.connection import WebOSClient
+
+from .logging import get_logger
+
+log = get_logger("tv")
 from pywebostv.controls import (
     SystemControl,
     MediaControl,
@@ -77,35 +79,43 @@ class TVController:
     def _connect(self):
         """Establish connection to the TV."""
         store = {"client_key": self.stored_key} if self.stored_key else {}
+        log.debug("Connecting to TV at %s (has stored key: %s)", self.ip, bool(self.stored_key))
 
         # Try secure connection first (newer TVs), then fall back to non-secure
         last_error = None
         for secure in [True, False]:
             try:
+                log.debug("Attempting %s connection", "secure" if secure else "insecure")
                 self.client = WebOSClient(self.ip, secure=secure)
                 self.client.connect()
+                log.debug("WebSocket connection established")
 
                 # If we have a stored key, try to use it
                 if self.stored_key:
                     try:
                         for status in self.client.register(store):
                             if status == WebOSClient.PROMPTED:
+                                log.warning("Stored key was rejected by TV")
                                 raise TVAuthenticationError(
                                     "Stored key rejected. Please run 'lgtv pair' again."
                                 )
                             elif status == WebOSClient.REGISTERED:
+                                log.debug("Successfully authenticated with stored key")
                                 break
                     except Exception as e:
                         raise TVAuthenticationError(f"Authentication failed: {e}")
 
                 # Connection successful
+                log.info("Connected to TV at %s", self.ip)
                 return
 
             except ConnectionRefusedError as e:
+                log.debug("Connection refused (secure=%s): %s", secure, e)
                 last_error = e
                 continue
             except (OSError, Exception) as e:
                 # Connection reset by peer, etc.
+                log.debug("Connection error (secure=%s): %s", secure, e)
                 last_error = e
                 if "Connection reset by peer" in str(e) or "Errno 54" in str(e):
                     continue  # Try the other connection type
@@ -207,8 +217,8 @@ class TVController:
         if self.client:
             try:
                 self.client.close()
-            except:
-                pass
+            except Exception:
+                pass  # Ignore errors during disconnect
 
     def __enter__(self):
         """Context manager entry."""

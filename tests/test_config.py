@@ -113,11 +113,11 @@ class TestAddTv:
 
     def test_add_tv_updates_existing(self, sample_config):
         """add_tv updates an existing TV with the same name."""
-        sample_config.add_tv("living_room", "192.168.1.999", mac="NEW:MAC:ADDR")
+        sample_config.add_tv("living_room", "192.168.1.200", mac="AA:BB:CC:DD:EE:FF")
 
         tv = sample_config.get_tv("living_room")
-        assert tv["ip"] == "192.168.1.999"
-        assert tv["mac"] == "NEW:MAC:ADDR"
+        assert tv["ip"] == "192.168.1.200"
+        assert tv["mac"] == "AA:BB:CC:DD:EE:FF"
 
     def test_add_tv_persists_to_file(self, temp_config_path):
         """add_tv saves changes to the config file."""
@@ -127,6 +127,22 @@ class TestAddTv:
         # Reload from file
         new_config = Config(config_path=temp_config_path)
         assert new_config.get_tv("test_tv") is not None
+
+    def test_add_tv_invalid_ip(self, empty_config):
+        """add_tv raises ValueError for invalid IP address."""
+        with pytest.raises(ValueError, match="Invalid IP address"):
+            empty_config.add_tv("test_tv", "192.168.1.999")
+
+    def test_add_tv_invalid_mac(self, empty_config):
+        """add_tv raises ValueError for invalid MAC address."""
+        with pytest.raises(ValueError, match="Invalid MAC address"):
+            empty_config.add_tv("test_tv", "192.168.1.100", mac="invalid-mac")
+
+    def test_add_tv_normalizes_mac(self, empty_config):
+        """add_tv normalizes MAC address to uppercase with colons."""
+        empty_config.add_tv("test_tv", "192.168.1.100", mac="aa-bb-cc-dd-ee-ff")
+        tv = empty_config.get_tv("test_tv")
+        assert tv["mac"] == "AA:BB:CC:DD:EE:FF"
 
 
 class TestRemoveTv:
@@ -270,7 +286,18 @@ class TestUpdateTvMac:
     def test_update_tv_mac_nonexistent(self, sample_config):
         """update_tv_mac raises ValueError for non-existent TV."""
         with pytest.raises(ValueError, match="TV 'nonexistent' not found"):
-            sample_config.update_tv_mac("nonexistent", "mac")
+            sample_config.update_tv_mac("nonexistent", "AA:BB:CC:DD:EE:FF")
+
+    def test_update_tv_mac_invalid(self, sample_config):
+        """update_tv_mac raises ValueError for invalid MAC address."""
+        with pytest.raises(ValueError, match="Invalid MAC address"):
+            sample_config.update_tv_mac("living_room", "invalid-mac")
+
+    def test_update_tv_mac_normalizes(self, sample_config):
+        """update_tv_mac normalizes MAC address."""
+        sample_config.update_tv_mac("living_room", "aa-bb-cc-dd-ee-ff")
+        tv = sample_config.get_tv("living_room")
+        assert tv["mac"] == "AA:BB:CC:DD:EE:FF"
 
     def test_update_tv_mac_persists(self, sample_config):
         """update_tv_mac saves changes to the config file."""

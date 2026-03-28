@@ -56,7 +56,7 @@ def on(config_obj, tv, ip):
             try:
                 with TVController(config_obj, tv_name=tv, ip=ip, timeout=5):
                     success("TV is now online and responsive")
-            except:
+            except (TVConnectionError, TVAuthenticationError, OSError):
                 warning("TV did not respond yet. It may still be starting up.")
         else:
             error("Cannot power on without MAC address")

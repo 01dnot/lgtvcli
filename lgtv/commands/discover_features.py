@@ -57,9 +57,9 @@ def discover_features(config_obj, tv, ip):
                 info(f"Could not retrieve service list: {e}")
 
             # Show what we've implemented
-            click.echo("\n" + "="*60)
+            click.echo("\n" + "=" * 60)
             click.echo("IMPLEMENTED FEATURES IN lgtv CLI:")
-            click.echo("="*60)
+            click.echo("=" * 60)
 
             features = {
                 "Power Control": ["power on/off", "screen on/off", "Wake-on-LAN"],
@@ -79,9 +79,9 @@ def discover_features(config_obj, tv, ip):
                     click.echo(f"  ✓ {item}")
 
             # Show known limitations
-            click.echo("\n" + "="*60)
+            click.echo("\n" + "=" * 60)
             click.echo("KNOWN LIMITATIONS:")
-            click.echo("="*60)
+            click.echo("=" * 60)
             click.echo("\n❌ Not available via external API:")
             click.echo("  - Screenshot capture")
             click.echo("  - HTML/DOM access")

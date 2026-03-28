@@ -3,7 +3,7 @@
 import click
 from ..config import Config
 from ..tv import TVController, TVConnectionError, TVAuthenticationError
-from ..utils import error, success, info as info_msg
+from ..utils import error, success
 
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -272,7 +272,7 @@ def inspect(config_obj, tv, ip):
                         click.echo(f"Window ID: {window_id}")
                     if params:
                         click.echo(f"Parameters: {params}")
-            except:
+            except Exception:
                 click.echo("Unable to retrieve app info")
 
             # Current channel (if applicable)
@@ -287,11 +287,11 @@ def inspect(config_obj, tv, ip):
                         program = controller.tv.get_current_program()
                         if program:
                             click.echo(f"Program: {program.get('programName', 'Unknown')}")
-                    except:
+                    except Exception:
                         pass
                 else:
                     click.echo("Not in TV mode")
-            except:
+            except Exception:
                 click.echo("Unable to retrieve channel info")
 
             # Audio/Volume
@@ -345,10 +345,10 @@ def inspect(config_obj, tv, ip):
                     else:
                         output = str(audio)
                     click.echo(f"Audio Output: {output}")
-            except:
+            except Exception:
                 click.echo("Unable to retrieve audio info")
 
-            click.echo("\n" + "="*50)
+            click.echo("\n" + "=" * 50)
             click.echo("Note: Screenshot and HTML/DOM capture are not supported")
             click.echo("by the LG WebOS external API.")
 

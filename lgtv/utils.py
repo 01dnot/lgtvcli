@@ -1,8 +1,61 @@
 """Utility functions for LG TV CLI."""
 
+import ipaddress
+import re
 import sys
 import click
 from wakeonlan import send_magic_packet
+
+
+# MAC address regex pattern (accepts : or - as separators)
+MAC_PATTERN = re.compile(
+    r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+)
+
+
+def validate_ip_address(ip: str) -> bool:
+    """Validate an IP address.
+
+    Args:
+        ip: IP address string to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_mac_address(mac: str) -> bool:
+    """Validate a MAC address.
+
+    Args:
+        mac: MAC address string to validate (formats: AA:BB:CC:DD:EE:FF or AA-BB-CC-DD-EE-FF)
+
+    Returns:
+        True if valid, False otherwise
+    """
+    return bool(MAC_PATTERN.match(mac))
+
+
+def normalize_mac_address(mac: str) -> str:
+    """Normalize MAC address to uppercase with colons.
+
+    Args:
+        mac: MAC address string
+
+    Returns:
+        Normalized MAC address (e.g., AA:BB:CC:DD:EE:FF)
+
+    Raises:
+        ValueError: If MAC address is invalid
+    """
+    if not validate_mac_address(mac):
+        raise ValueError(f"Invalid MAC address: {mac}")
+    return mac.upper().replace('-', ':')
 
 
 def error(message: str, exit_code: int = 1):

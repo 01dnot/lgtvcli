@@ -12,6 +12,9 @@ from lgtv.utils import (
     format_volume_info,
     format_app_info,
     find_app_by_name,
+    validate_ip_address,
+    validate_mac_address,
+    normalize_mac_address,
 )
 
 
@@ -276,3 +279,72 @@ class TestFindAppByName:
 
         result = find_app_by_name(apps, "Spotify")
         assert result["id"] == "spotify"
+
+
+class TestValidateIpAddress:
+    """Tests for validate_ip_address() function."""
+
+    def test_valid_ipv4(self):
+        """validate_ip_address() accepts valid IPv4 addresses."""
+        assert validate_ip_address("192.168.1.100") is True
+        assert validate_ip_address("10.0.0.1") is True
+        assert validate_ip_address("255.255.255.255") is True
+        assert validate_ip_address("0.0.0.0") is True
+
+    def test_valid_ipv6(self):
+        """validate_ip_address() accepts valid IPv6 addresses."""
+        assert validate_ip_address("::1") is True
+        assert validate_ip_address("fe80::1") is True
+
+    def test_invalid_ip(self):
+        """validate_ip_address() rejects invalid IP addresses."""
+        assert validate_ip_address("192.168.1.999") is False
+        assert validate_ip_address("192.168.1") is False
+        assert validate_ip_address("not-an-ip") is False
+        assert validate_ip_address("") is False
+        assert validate_ip_address("192.168.1.1.1") is False
+
+
+class TestValidateMacAddress:
+    """Tests for validate_mac_address() function."""
+
+    def test_valid_mac_colon(self):
+        """validate_mac_address() accepts MAC with colons."""
+        assert validate_mac_address("AA:BB:CC:DD:EE:FF") is True
+        assert validate_mac_address("aa:bb:cc:dd:ee:ff") is True
+        assert validate_mac_address("00:11:22:33:44:55") is True
+
+    def test_valid_mac_dash(self):
+        """validate_mac_address() accepts MAC with dashes."""
+        assert validate_mac_address("AA-BB-CC-DD-EE-FF") is True
+        assert validate_mac_address("aa-bb-cc-dd-ee-ff") is True
+
+    def test_invalid_mac(self):
+        """validate_mac_address() rejects invalid MAC addresses."""
+        assert validate_mac_address("AA:BB:CC:DD:EE") is False
+        assert validate_mac_address("AA:BB:CC:DD:EE:FF:GG") is False
+        assert validate_mac_address("AABBCCDDEEFF") is False
+        assert validate_mac_address("not-a-mac") is False
+        assert validate_mac_address("") is False
+        assert validate_mac_address("GG:HH:II:JJ:KK:LL") is False
+
+
+class TestNormalizeMacAddress:
+    """Tests for normalize_mac_address() function."""
+
+    def test_normalize_lowercase(self):
+        """normalize_mac_address() converts to uppercase."""
+        assert normalize_mac_address("aa:bb:cc:dd:ee:ff") == "AA:BB:CC:DD:EE:FF"
+
+    def test_normalize_dashes(self):
+        """normalize_mac_address() converts dashes to colons."""
+        assert normalize_mac_address("AA-BB-CC-DD-EE-FF") == "AA:BB:CC:DD:EE:FF"
+
+    def test_normalize_already_normalized(self):
+        """normalize_mac_address() returns already normalized address unchanged."""
+        assert normalize_mac_address("AA:BB:CC:DD:EE:FF") == "AA:BB:CC:DD:EE:FF"
+
+    def test_normalize_invalid_raises(self):
+        """normalize_mac_address() raises ValueError for invalid MAC."""
+        with pytest.raises(ValueError, match="Invalid MAC address"):
+            normalize_mac_address("not-a-mac")

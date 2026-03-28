@@ -2,8 +2,12 @@
 
 import socket
 import time
-from typing import List, Dict, Optional
+from typing import List, Dict
 from zeroconf import Zeroconf, ServiceBrowser, ServiceListener
+
+from .logging import get_logger
+
+log = get_logger("discovery")
 
 
 class LGTVListener(ServiceListener):
@@ -44,6 +48,7 @@ def discover_ssdp(timeout: int = 3) -> List[Dict]:
     Returns:
         List of discovered TVs with their information
     """
+    log.debug("Starting SSDP discovery (timeout=%ds)", timeout)
     tvs = []
 
     # SSDP discovery message
@@ -56,10 +61,12 @@ def discover_ssdp(timeout: int = 3) -> List[Dict]:
         "\r\n"
     )
 
+    sock = None
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.settimeout(timeout)
         sock.sendto(ssdp_request.encode(), ("239.255.255.250", 1900))
+        log.debug("Sent SSDP M-SEARCH request")
 
         end_time = time.time() + timeout
         seen_ips = set()
@@ -87,6 +94,7 @@ def discover_ssdp(timeout: int = 3) -> List[Dict]:
                                 model = line.split(":", 1)[1].strip()
                                 break
 
+                        log.debug("SSDP: Found TV at %s (model=%s)", ip, model)
                         tvs.append({
                             "ip": ip,
                             "model": model,
@@ -95,14 +103,16 @@ def discover_ssdp(timeout: int = 3) -> List[Dict]:
 
             except socket.timeout:
                 break
-            except Exception:
+            except OSError:
                 continue
 
-        sock.close()
+    except OSError as e:
+        log.debug("SSDP discovery error: %s", e)
+    finally:
+        if sock:
+            sock.close()
 
-    except Exception:
-        pass
-
+    log.debug("SSDP discovery complete: found %d TV(s)", len(tvs))
     return tvs
 
 
@@ -115,8 +125,11 @@ def discover_mdns(timeout: int = 3) -> List[Dict]:
     Returns:
         List of discovered TVs with their information
     """
+    log.debug("Starting mDNS discovery (timeout=%ds)", timeout)
     tvs = []
 
+    zeroconf = None
+    browser = None
     try:
         zeroconf = Zeroconf()
         listener = LGTVListener()
@@ -127,13 +140,12 @@ def discover_mdns(timeout: int = 3) -> List[Dict]:
             "_webostv._tcp.local.",
             listener
         )
+        log.debug("mDNS: Browsing for _webostv._tcp.local.")
 
         time.sleep(timeout)
 
-        browser.cancel()
-        zeroconf.close()
-
         for tv in listener.tvs:
+            log.debug("mDNS: Found TV at %s (name=%s)", tv["ip"], tv.get("name"))
             tvs.append({
                 "ip": tv["ip"],
                 "name": tv.get("name"),
@@ -141,9 +153,15 @@ def discover_mdns(timeout: int = 3) -> List[Dict]:
                 "discovery_method": "mDNS",
             })
 
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("mDNS discovery error: %s", e)
+    finally:
+        if browser:
+            browser.cancel()
+        if zeroconf:
+            zeroconf.close()
 
+    log.debug("mDNS discovery complete: found %d TV(s)", len(tvs))
     return tvs
 
 

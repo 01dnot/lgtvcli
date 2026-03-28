@@ -3,7 +3,7 @@
 import click
 from ..config import Config
 from ..tv import TVController, TVConnectionError, TVAuthenticationError
-from ..utils import error, success, info, format_volume_info
+from ..utils import error, success, info, warning, format_volume_info
 
 
 pass_config = click.make_pass_decorator(Config, ensure=True)

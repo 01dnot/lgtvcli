@@ -2,8 +2,15 @@
 
 import json
 import os
+import stat
+import tempfile
 from pathlib import Path
 from typing import Dict, Optional
+
+from .logging import get_logger
+from .utils import validate_ip_address, validate_mac_address, normalize_mac_address
+
+log = get_logger("config")
 
 
 class Config:
@@ -36,9 +43,29 @@ class Config:
             return {"default_tv": None, "tvs": {}}
 
     def save(self):
-        """Save configuration to file."""
-        with open(self.config_path, "w") as f:
-            json.dump(self._data, f, indent=2)
+        """Save configuration to file atomically with secure permissions."""
+        log.debug("Saving configuration to %s", self.config_path)
+        # Write to temp file first, then rename for atomic operation
+        fd, tmp_path = tempfile.mkstemp(
+            dir=self.config_path.parent,
+            prefix=".config_",
+            suffix=".tmp"
+        )
+        try:
+            # Set restrictive permissions on temp file before writing
+            os.chmod(tmp_path, stat.S_IRUSR | stat.S_IWUSR)  # 0600
+            with os.fdopen(fd, "w") as f:
+                json.dump(self._data, f, indent=2)
+            os.replace(tmp_path, self.config_path)
+            # Ensure final file also has correct permissions
+            os.chmod(self.config_path, stat.S_IRUSR | stat.S_IWUSR)  # 0600
+            log.debug("Configuration saved successfully")
+        except Exception as e:
+            log.error("Failed to save configuration: %s", e)
+            # Clean up temp file on failure
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
 
     def add_tv(self, name: str, ip: str, mac: Optional[str] = None,
                key: Optional[str] = None, model: Optional[str] = None):
@@ -50,7 +77,18 @@ class Config:
             mac: MAC address for Wake-on-LAN (optional)
             key: Pairing key for authentication (optional)
             model: TV model information (optional)
+
+        Raises:
+            ValueError: If IP or MAC address is invalid
         """
+        if not validate_ip_address(ip):
+            raise ValueError(f"Invalid IP address: {ip}")
+
+        if mac is not None:
+            if not validate_mac_address(mac):
+                raise ValueError(f"Invalid MAC address: {mac}")
+            mac = normalize_mac_address(mac)
+
         self._data["tvs"][name] = {
             "name": name,
             "ip": ip,
@@ -156,10 +194,13 @@ class Config:
             mac: New MAC address
 
         Raises:
-            ValueError: If TV name doesn't exist
+            ValueError: If TV name doesn't exist or MAC address is invalid
         """
         if name not in self._data["tvs"]:
             raise ValueError(f"TV '{name}' not found in configuration")
 
-        self._data["tvs"][name]["mac"] = mac
+        if not validate_mac_address(mac):
+            raise ValueError(f"Invalid MAC address: {mac}")
+
+        self._data["tvs"][name]["mac"] = normalize_mac_address(mac)
         self.save()
