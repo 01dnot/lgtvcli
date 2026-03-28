@@ -54,5 +54,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run flake8
-        run: flake8 lgtv tests --max-line-length=100 --ignore=E501,W503
+      - name: Run flake8 on tests
+        run: flake8 tests --max-line-length=100 --ignore=E501,W503

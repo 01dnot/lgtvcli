@@ -32,7 +32,7 @@ class TestConfigInit:
     def test_init_creates_parent_directories(self, tmp_path):
         """Config creates parent directories for custom path."""
         nested_path = tmp_path / "deep" / "nested" / "config.json"
-        config = Config(config_path=str(nested_path))
+        Config(config_path=str(nested_path))  # noqa: F841
         assert nested_path.parent.exists()
 
     def test_init_with_empty_config_file(self, temp_config_path):

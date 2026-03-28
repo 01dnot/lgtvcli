@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
-from lgtv.commands.media import media, play, pause, stop, rewind, forward
+from lgtv.commands.media import media
 from lgtv.tv import TVConnectionError, TVAuthenticationError
 
 

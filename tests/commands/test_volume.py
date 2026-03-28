@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
-from lgtv.commands.volume import volume, audio, up, down, set, mute, status
-from lgtv.tv import TVConnectionError, TVAuthenticationError
+from lgtv.commands.volume import volume, audio
+from lgtv.tv import TVConnectionError
 
 
 @pytest.fixture

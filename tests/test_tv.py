@@ -1,10 +1,9 @@
 """Tests for lgtv.tv module."""
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from lgtv.tv import TVController, TVConnectionError, TVAuthenticationError
-from lgtv.config import Config
 
 
 class TestTVControllerInit:
@@ -52,7 +51,7 @@ class TestTVControllerInit:
 
     def test_init_calls_connect(self, sample_config, mock_webos_client):
         """TVController calls WebOSClient.connect during init."""
-        controller = TVController(sample_config, tv_name="living_room")
+        TVController(sample_config, tv_name="living_room")
 
         mock_webos_client.return_value.connect.assert_called()
 
@@ -72,11 +71,11 @@ class TestTVControllerConnect:
 
             client_instance.register.side_effect = register_side_effect
 
-            controller = TVController(sample_config, tv_name="living_room")
+            TVController(sample_config, tv_name="living_room")
 
             # First call should be with secure=True
             first_call = MockClient.call_args_list[0]
-            assert first_call[1].get("secure") == True
+            assert first_call[1].get("secure") is True
 
     def test_connect_falls_back_to_insecure(self, sample_config):
         """_connect falls back to insecure when secure fails."""
@@ -89,7 +88,7 @@ class TestTVControllerConnect:
                 call_count[0] += 1
                 client_instance = MagicMock()
 
-                if kwargs.get("secure") == True:
+                if kwargs.get("secure") is True:
                     # Secure connection fails
                     client_instance.connect.side_effect = ConnectionRefusedError()
                 else:
@@ -105,14 +104,14 @@ class TestTVControllerConnect:
 
             MockClient.side_effect = client_factory
 
-            controller = TVController(sample_config, tv_name="living_room")
+            TVController(sample_config, tv_name="living_room")
 
             # Should have tried twice
             assert call_count[0] == 2
 
     def test_connect_with_stored_key(self, sample_config, mock_webos_client):
         """_connect uses stored key for registration."""
-        controller = TVController(sample_config, tv_name="living_room")
+        TVController(sample_config, tv_name="living_room")
 
         # Verify register was called
         mock_webos_client.return_value.register.assert_called()
@@ -260,7 +259,7 @@ class TestTVControllerProperties:
             controller = TVController(sample_config, tv_name="living_room")
             assert controller._system is None
 
-            system = controller.system
+            _ = controller.system  # Trigger lazy initialization
             MockSystemControl.assert_called_once()
             assert controller._system is not None
 

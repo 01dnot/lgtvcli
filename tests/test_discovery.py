@@ -1,9 +1,7 @@
 """Tests for lgtv.discovery module."""
 
 import socket
-import time
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from lgtv.discovery import (
     LGTVListener,
@@ -205,7 +203,7 @@ class TestDiscoverMdns:
     def test_discover_mdns_returns_tvs(self):
         """discover_mdns returns TVs discovered by listener."""
         with patch("lgtv.discovery.Zeroconf") as MockZeroconf, \
-             patch("lgtv.discovery.ServiceBrowser") as MockBrowser, \
+             patch("lgtv.discovery.ServiceBrowser"), \
              patch("lgtv.discovery.time.sleep"), \
              patch("lgtv.discovery.LGTVListener") as MockListener:
             mock_zc = MagicMock()

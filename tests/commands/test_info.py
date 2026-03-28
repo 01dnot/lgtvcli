@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
-from lgtv.commands.info import info, system, current
+from lgtv.commands.info import info
 from lgtv.tv import TVConnectionError, TVAuthenticationError
 
 

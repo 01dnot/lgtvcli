@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 from lgtv.commands.control import button, notify, keyboard, mouse, inspect, VALID_BUTTONS
-from lgtv.tv import TVConnectionError, TVAuthenticationError
+from lgtv.tv import TVConnectionError
 
 
 @pytest.fixture
