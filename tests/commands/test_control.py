@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 from lgtv.commands.control import button, notify, keyboard, mouse, inspect, VALID_BUTTONS
-from lgtv.tv import TVConnectionError
+from lgtv.tv import TVConnectionError, TVAuthenticationError
 
 
 @pytest.fixture
@@ -329,3 +329,370 @@ class TestValidButtons:
         assert "green" in VALID_BUTTONS
         assert "yellow" in VALID_BUTTONS
         assert "blue" in VALID_BUTTONS
+
+
+class TestButtonEdgeCases:
+    """Tests for button edge cases."""
+
+    def test_button_asterisk(self, runner, sample_config):
+        """button asterisk calls input.asterisk()."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(button, ["asterisk"], obj=sample_config)
+
+            assert result.exit_code == 0
+            mock_controller.input.asterisk.assert_called_once()
+
+    def test_button_cc(self, runner, sample_config):
+        """button cc calls input.cc()."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(button, ["cc"], obj=sample_config)
+
+            assert result.exit_code == 0
+            mock_controller.input.cc.assert_called_once()
+
+    def test_button_auth_error(self, runner, sample_config):
+        """button handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(button, ["home"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_button_generic_error(self, runner, sample_config):
+        """button handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.input.connect_input.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(button, ["home"], obj=sample_config)
+
+            assert "Failed to send button press" in result.output
+
+
+class TestNotifyEdgeCases:
+    """Tests for notify edge cases."""
+
+    def test_notify_auth_error(self, runner, sample_config):
+        """notify handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(notify, ["Hello"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_notify_generic_error(self, runner, sample_config):
+        """notify handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.notify.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(notify, ["Hello"], obj=sample_config)
+
+            assert "Failed to send notification" in result.output
+
+
+class TestKeyboardEdgeCases:
+    """Tests for keyboard edge cases."""
+
+    def test_keyboard_auth_error(self, runner, sample_config):
+        """keyboard handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(keyboard, ["text"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_keyboard_generic_error(self, runner, sample_config):
+        """keyboard handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.input.connect_input.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(keyboard, ["text"], obj=sample_config)
+
+            assert "Failed to send keyboard input" in result.output
+
+
+class TestMouseEdgeCases:
+    """Tests for mouse edge cases."""
+
+    def test_mouse_move_connection_error(self, runner, sample_config):
+        """mouse move handles connection errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(mouse, ["move", "10", "10"], obj=sample_config)
+
+            assert "Connection failed" in result.output
+
+    def test_mouse_move_auth_error(self, runner, sample_config):
+        """mouse move handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(mouse, ["move", "10", "10"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_mouse_move_generic_error(self, runner, sample_config):
+        """mouse move handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.input.connect_input.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(mouse, ["move", "10", "10"], obj=sample_config)
+
+            assert "Failed to move cursor" in result.output
+
+    def test_mouse_click_connection_error(self, runner, sample_config):
+        """mouse click handles connection errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(mouse, ["click"], obj=sample_config)
+
+            assert "Connection failed" in result.output
+
+    def test_mouse_click_auth_error(self, runner, sample_config):
+        """mouse click handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(mouse, ["click"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_mouse_click_generic_error(self, runner, sample_config):
+        """mouse click handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.input.connect_input.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(mouse, ["click"], obj=sample_config)
+
+            assert "Failed to click" in result.output
+
+
+class TestInspectEdgeCases:
+    """Tests for inspect edge cases."""
+
+    def test_inspect_auth_error(self, runner, sample_config):
+        """inspect handles auth errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_inspect_generic_error(self, runner, sample_config):
+        """inspect handles generic errors."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            MockController.side_effect = Exception("Something went wrong")
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert "Failed to inspect" in result.output
+
+    def test_inspect_with_data_attribute_system(self, runner, sample_config):
+        """inspect handles system info with .data attribute."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_system = MagicMock()
+            mock_system.data = {
+                "modelName": "OLED77C2",
+                "sdkVersion": "8.0.0",
+                "major_ver": "1",
+                "minor_ver": "2",
+            }
+            mock_controller.system.info.return_value = mock_system
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = None
+            mock_controller.media.get_audio_output.return_value = None
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "OLED77C2" in result.output
+            assert "1.2" in result.output  # firmware from major/minor
+
+    def test_inspect_with_object_attributes(self, runner, sample_config):
+        """inspect handles system info with direct attributes."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_system = MagicMock(spec=[])
+            mock_system.modelName = "OLED65G1"
+            mock_system.sdkVersion = "6.0.0"
+            mock_system.firmwareRevision = "3.0"
+            mock_controller.system.info.return_value = mock_system
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = None
+            mock_controller.media.get_audio_output.return_value = None
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "OLED65G1" in result.output
+
+    def test_inspect_app_string_response(self, runner, sample_config):
+        """inspect handles app info as plain string."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = "com.webos.app.livetv"
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = None
+            mock_controller.media.get_audio_output.return_value = None
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "com.webos.app.livetv" in result.output
+
+    def test_inspect_channel_with_program(self, runner, sample_config):
+        """inspect shows channel and program info."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = {
+                "channelNumber": "5",
+                "channelName": "NBC"
+            }
+            mock_controller.tv.get_current_program.return_value = {
+                "programName": "Evening News"
+            }
+            mock_controller.media.get_volume.return_value = None
+            mock_controller.media.get_audio_output.return_value = None
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "NBC" in result.output
+            assert "Evening News" in result.output
+
+    def test_inspect_volume_with_data_attribute(self, runner, sample_config):
+        """inspect handles volume with .data attribute."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+
+            mock_vol = MagicMock()
+            mock_vol.data = {"volumeStatus": {"volume": 35, "muteStatus": True}}
+            mock_controller.media.get_volume.return_value = mock_vol
+            mock_controller.media.get_audio_output.return_value = None
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "35" in result.output
+            assert "MUTED" in result.output
+
+    def test_inspect_audio_string_response(self, runner, sample_config):
+        """inspect handles audio output as plain string."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = {"volume": 30, "muted": False}
+            mock_controller.media.get_audio_output.return_value = "hdmi_arc"
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "hdmi_arc" in result.output
+
+    def test_inspect_audio_with_data_attribute(self, runner, sample_config):
+        """inspect handles audio with .data attribute."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = {"volume": 30}
+
+            mock_audio = MagicMock()
+            mock_audio.data = {"soundOutput": "external_optical"}
+            mock_controller.media.get_audio_output.return_value = mock_audio
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "external_optical" in result.output
+
+    def test_inspect_audio_with_soundOutput_attribute(self, runner, sample_config):
+        """inspect handles audio with soundOutput attribute."""
+        with patch("lgtv.commands.control.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.return_value = {}
+            mock_controller.app.get_current.return_value = None
+            mock_controller.tv.get_current_channel.return_value = None
+            mock_controller.media.get_volume.return_value = {"volume": 30}
+
+            mock_audio = MagicMock(spec=[])
+            mock_audio.soundOutput = "bt_soundbar"
+            mock_controller.media.get_audio_output.return_value = mock_audio
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(inspect, [], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "bt_soundbar" in result.output

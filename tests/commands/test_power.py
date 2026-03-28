@@ -201,3 +201,119 @@ class TestPowerStatus:
 
             assert result.exit_code != 0
             assert "Auth failed" in result.output
+
+    def test_power_status_generic_error(self, runner, sample_config):
+        """power status handles generic errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.info.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(power, ["status"], obj=sample_config)
+
+            assert "Failed to get power status" in result.output
+
+
+class TestPowerOnEdgeCases:
+    """Tests for power on edge cases."""
+
+    def test_power_on_wol_sent_tv_not_responding(self, runner, sample_config):
+        """power on warns when TV doesn't respond after WoL."""
+        with patch("lgtv.commands.power.wake_on_lan") as mock_wol, \
+             patch("lgtv.commands.power.TVController") as MockController, \
+             patch("lgtv.commands.power.time.sleep"):
+            # Mock connection failure after WoL
+            MockController.side_effect = TVConnectionError("Not responding")
+
+            result = runner.invoke(power, ["on"], obj=sample_config)
+
+            # Should still exit ok, just with warning
+            mock_wol.assert_called_once()
+            assert "did not respond" in result.output or "still be starting" in result.output
+
+    def test_power_on_generic_error(self, runner, sample_config):
+        """power on handles generic errors."""
+        with patch("lgtv.commands.power.wake_on_lan", side_effect=Exception("Network error")):
+            result = runner.invoke(power, ["on"], obj=sample_config)
+
+            assert "Network error" in result.output
+
+
+class TestPowerOffEdgeCases:
+    """Tests for power off edge cases."""
+
+    def test_power_off_generic_error(self, runner, sample_config):
+        """power off handles generic errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.power_off.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(power, ["off"], obj=sample_config)
+
+            assert "Failed to power off" in result.output
+
+
+class TestScreenOffEdgeCases:
+    """Tests for screen-off edge cases."""
+
+    def test_screen_off_auth_error(self, runner, sample_config):
+        """screen-off handles auth errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(power, ["screen-off"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_screen_off_generic_error(self, runner, sample_config):
+        """screen-off handles generic errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.screen_off.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(power, ["screen-off"], obj=sample_config)
+
+            assert "Failed to turn screen off" in result.output
+
+
+class TestScreenOnEdgeCases:
+    """Tests for screen-on edge cases."""
+
+    def test_screen_on_connection_error(self, runner, sample_config):
+        """screen-on handles connection errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(power, ["screen-on"], obj=sample_config)
+
+            assert "Connection failed" in result.output
+
+    def test_screen_on_auth_error(self, runner, sample_config):
+        """screen-on handles auth errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(power, ["screen-on"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_screen_on_generic_error(self, runner, sample_config):
+        """screen-on handles generic errors."""
+        with patch("lgtv.commands.power.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.system.screen_on.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(power, ["screen-on"], obj=sample_config)
+
+            assert "Failed to turn screen on" in result.output

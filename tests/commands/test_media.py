@@ -170,3 +170,126 @@ class TestMediaWithIpOption:
 
             assert result.exit_code == 0
             MockController.assert_called_with(sample_config, tv_name=None, ip="192.168.1.200")
+
+
+class TestMediaGenericErrors:
+    """Tests for generic error handling in media commands."""
+
+    def test_media_play_generic_error(self, runner, sample_config):
+        """media play handles generic errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.media.play.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(media, ["play"], obj=sample_config)
+
+            assert "Failed to start playback" in result.output
+
+    def test_media_pause_auth_error(self, runner, sample_config):
+        """media pause handles auth errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(media, ["pause"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_media_pause_generic_error(self, runner, sample_config):
+        """media pause handles generic errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.media.pause.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(media, ["pause"], obj=sample_config)
+
+            assert "Failed to pause" in result.output
+
+    def test_media_stop_connection_error(self, runner, sample_config):
+        """media stop handles connection errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(media, ["stop"], obj=sample_config)
+
+            assert "Connection failed" in result.output
+
+    def test_media_stop_auth_error(self, runner, sample_config):
+        """media stop handles auth errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(media, ["stop"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_media_stop_generic_error(self, runner, sample_config):
+        """media stop handles generic errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.media.stop.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(media, ["stop"], obj=sample_config)
+
+            assert "Failed to stop" in result.output
+
+    def test_media_rewind_connection_error(self, runner, sample_config):
+        """media rewind handles connection errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(media, ["rewind"], obj=sample_config)
+
+            assert "Connection failed" in result.output
+
+    def test_media_rewind_auth_error(self, runner, sample_config):
+        """media rewind handles auth errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(media, ["rewind"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_media_rewind_generic_error(self, runner, sample_config):
+        """media rewind handles generic errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.media.rewind.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(media, ["rewind"], obj=sample_config)
+
+            assert "Failed to rewind" in result.output
+
+    def test_media_forward_auth_error(self, runner, sample_config):
+        """media forward handles auth errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(media, ["forward"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_media_forward_generic_error(self, runner, sample_config):
+        """media forward handles generic errors."""
+        with patch("lgtv.commands.media.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.media.fast_forward.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(media, ["forward"], obj=sample_config)
+
+            assert "Failed to fast forward" in result.output

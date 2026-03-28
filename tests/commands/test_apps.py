@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 from lgtv.commands.apps import app
-from lgtv.tv import TVConnectionError
+from lgtv.tv import TVConnectionError, TVAuthenticationError
 
 
 @pytest.fixture
@@ -242,4 +242,250 @@ class TestAppClose:
             result = runner.invoke(app, ["close", "netflix"], obj=sample_config)
 
             assert result.exit_code != 0
+            assert "Connection failed" in result.output
+
+    def test_app_close_auth_error(self, runner, sample_config):
+        """app close handles auth errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(app, ["close", "netflix"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_app_close_generic_error(self, runner, sample_config):
+        """app close handles generic errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.close.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["close", "netflix"], obj=sample_config)
+
+            assert "Failed to close" in result.output
+
+
+class TestAppListEdgeCases:
+    """Tests for app list edge cases."""
+
+    def test_app_list_auth_error(self, runner, sample_config):
+        """app list handles auth errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(app, ["list"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_app_list_generic_error(self, runner, sample_config):
+        """app list handles generic errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.list_apps.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["list"], obj=sample_config)
+
+            assert "Failed to list" in result.output
+
+    def test_app_list_with_data_attribute(self, runner, sample_config):
+        """app list handles apps with .data attribute."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_app = MagicMock()
+            mock_app.data = {"id": "test_app", "title": "Test App"}
+            mock_controller.app.list_apps.return_value = [mock_app]
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["list"], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "Test App" in result.output
+
+    def test_app_list_with_unknown_object_type(self, runner, sample_config):
+        """app list handles unknown object types."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_app = MagicMock(spec=[])  # No .data attribute
+            mock_app.id = "my_app"
+            mock_app.title = "My App"
+            mock_controller.app.list_apps.return_value = [mock_app]
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["list"], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "My App" in result.output
+
+    def test_app_list_with_appId_attribute(self, runner, sample_config):
+        """app list handles objects with appId attribute."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_app = MagicMock(spec=[])
+            mock_app.appId = "my_app_id"
+            mock_app.name = "App Name"
+            mock_controller.app.list_apps.return_value = [mock_app]
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["list"], obj=sample_config)
+
+            assert result.exit_code == 0
+
+
+class TestAppLaunchEdgeCases:
+    """Tests for app launch edge cases."""
+
+    def test_app_launch_auth_error(self, runner, sample_config):
+        """app launch handles auth errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(app, ["launch", "Netflix"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_app_launch_generic_error(self, runner, sample_config, sample_apps):
+        """app launch handles generic errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.list_apps.return_value = sample_apps
+            mock_controller.app.launch.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["launch", "Netflix"], obj=sample_config)
+
+            assert "Failed to launch" in result.output
+
+    def test_app_launch_with_debug(self, runner, sample_config, sample_apps):
+        """app launch --debug shows debug info."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.list_apps.return_value = sample_apps
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["launch", "Netflix", "--debug"], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "DEBUG:" in result.output
+
+    def test_app_launch_debug_with_data_attr(self, runner, sample_config):
+        """app launch --debug shows .data info."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_app = MagicMock()
+            mock_app.data = {"id": "netflix", "title": "Netflix"}
+            mock_controller.app.list_apps.return_value = [mock_app]
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["launch", "Netflix", "--debug"], obj=sample_config)
+
+            assert "DEBUG:" in result.output
+
+    def test_app_launch_app_no_id(self, runner, sample_config):
+        """app launch handles app without ID."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.list_apps.return_value = [{"title": "Netflix"}]  # No id
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["launch", "Netflix"], obj=sample_config)
+
+            assert "has no ID" in result.output
+
+
+class TestAppCurrentEdgeCases:
+    """Tests for app current edge cases."""
+
+    def test_app_current_auth_error(self, runner, sample_config):
+        """app current handles auth errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            MockController.side_effect = TVAuthenticationError("Auth failed")
+
+            result = runner.invoke(app, ["current"], obj=sample_config)
+
+            assert "Auth failed" in result.output
+
+    def test_app_current_generic_error(self, runner, sample_config):
+        """app current handles generic errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+            mock_controller.app.get_current.side_effect = Exception("Boom")
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["current"], obj=sample_config)
+
+            assert "Failed to get current" in result.output
+
+    def test_app_current_with_data_attribute(self, runner, sample_config):
+        """app current handles response with .data attribute."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_response = MagicMock()
+            mock_response.data = {
+                "appId": "youtube",
+                "title": "YouTube",
+                "windowId": "win123"
+            }
+            mock_controller.app.get_current.return_value = mock_response
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["current"], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "YouTube" in result.output
+            assert "win123" in result.output
+
+    def test_app_current_with_attributes(self, runner, sample_config):
+        """app current handles response with direct attributes."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            mock_controller = MagicMock()
+            mock_controller.__enter__ = MagicMock(return_value=mock_controller)
+            mock_controller.__exit__ = MagicMock(return_value=False)
+
+            mock_response = MagicMock(spec=[])
+            mock_response.title = "Spotify"
+            mock_response.appId = "spotify"
+            mock_response.windowId = None
+            mock_controller.app.get_current.return_value = mock_response
+            MockController.return_value = mock_controller
+
+            result = runner.invoke(app, ["current"], obj=sample_config)
+
+            assert result.exit_code == 0
+            assert "Spotify" in result.output
+
+    def test_app_current_connection_error(self, runner, sample_config):
+        """app current handles connection errors."""
+        with patch("lgtv.commands.apps.TVController") as MockController:
+            MockController.side_effect = TVConnectionError("Connection failed")
+
+            result = runner.invoke(app, ["current"], obj=sample_config)
+
             assert "Connection failed" in result.output
