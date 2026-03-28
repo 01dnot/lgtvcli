@@ -247,6 +247,37 @@ lgtv --tv bedroom power off
 lgtv --ip 192.168.1.100 volume set 30
 ```
 
+## Shell Completion
+
+Enable tab completion for bash, zsh, or fish shells.
+
+### Automatic Installation
+
+```bash
+lgtv completion install
+```
+
+This auto-detects your shell and adds completion to your shell's config file.
+
+### Manual Installation
+
+**Bash** (add to `~/.bashrc`):
+```bash
+eval "$(_LGTV_COMPLETE=bash_source lgtv)"
+```
+
+**Zsh** (add to `~/.zshrc`):
+```bash
+eval "$(_LGTV_COMPLETE=zsh_source lgtv)"
+```
+
+**Fish** (add to `~/.config/fish/completions/lgtv.fish`):
+```fish
+_LGTV_COMPLETE=fish_source lgtv | source
+```
+
+After adding, restart your shell or source the config file.
+
 ## Configuration
 
 Configuration is stored at `~/.config/lgtv/config.json`:

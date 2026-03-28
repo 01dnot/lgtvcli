@@ -1,11 +1,26 @@
 """Main CLI interface for LG TV control."""
 
+import os
+import sys
 import click
 from .config import Config
 from .tv import TVController, TVConnectionError, TVAuthenticationError
 from .discovery import discover_tvs
 from .logging import setup_logging, get_logger
 from .utils import error, success, info as info_msg, warning
+
+
+SHELL_COMPLETION_SCRIPTS = {
+    "bash": '''# Add this to ~/.bashrc or ~/.bash_profile:
+eval "$(_LGTV_COMPLETE=bash_source lgtv)"
+''',
+    "zsh": '''# Add this to ~/.zshrc:
+eval "$(_LGTV_COMPLETE=zsh_source lgtv)"
+''',
+    "fish": '''# Add this to ~/.config/fish/completions/lgtv.fish:
+_LGTV_COMPLETE=fish_source lgtv | source
+''',
+}
 
 
 # Global options that can be passed to all commands
@@ -190,6 +205,83 @@ def pair(config_obj, ip, name):
         error(str(e))
     except Exception as e:
         error(f"Unexpected error: {e}")
+
+
+@main.group()
+def completion():
+    """Generate shell completion scripts."""
+    pass
+
+
+@completion.command("bash")
+def completion_bash():
+    """Generate bash completion script."""
+    click.echo(SHELL_COMPLETION_SCRIPTS["bash"])
+    click.echo("# Or run directly:")
+    click.echo('# eval "$(_LGTV_COMPLETE=bash_source lgtv)"')
+
+
+@completion.command("zsh")
+def completion_zsh():
+    """Generate zsh completion script."""
+    click.echo(SHELL_COMPLETION_SCRIPTS["zsh"])
+    click.echo("# Or run directly:")
+    click.echo('# eval "$(_LGTV_COMPLETE=zsh_source lgtv)"')
+
+
+@completion.command("fish")
+def completion_fish():
+    """Generate fish completion script."""
+    click.echo(SHELL_COMPLETION_SCRIPTS["fish"])
+    click.echo("# Or run directly:")
+    click.echo("# _LGTV_COMPLETE=fish_source lgtv | source")
+
+
+@completion.command("install")
+@click.option("--shell", type=click.Choice(["bash", "zsh", "fish"]),
+              help="Shell type (auto-detected if not specified)")
+def completion_install(shell):
+    """Install shell completion (auto-detects shell)."""
+    if not shell:
+        # Auto-detect shell
+        shell_path = os.environ.get("SHELL", "")
+        if "zsh" in shell_path:
+            shell = "zsh"
+        elif "fish" in shell_path:
+            shell = "fish"
+        elif "bash" in shell_path:
+            shell = "bash"
+        else:
+            error("Could not detect shell. Use --shell to specify.")
+            return
+
+    home = os.path.expanduser("~")
+
+    if shell == "bash":
+        rc_file = os.path.join(home, ".bashrc")
+        completion_line = 'eval "$(_LGTV_COMPLETE=bash_source lgtv)"'
+    elif shell == "zsh":
+        rc_file = os.path.join(home, ".zshrc")
+        completion_line = 'eval "$(_LGTV_COMPLETE=zsh_source lgtv)"'
+    elif shell == "fish":
+        rc_file = os.path.join(home, ".config", "fish", "completions", "lgtv.fish")
+        completion_line = "_LGTV_COMPLETE=fish_source lgtv | source"
+        # Ensure fish completions directory exists
+        os.makedirs(os.path.dirname(rc_file), exist_ok=True)
+
+    # Check if already installed
+    if os.path.exists(rc_file):
+        with open(rc_file, "r") as f:
+            if "_LGTV_COMPLETE" in f.read():
+                info_msg(f"Completion already installed in {rc_file}")
+                return
+
+    # Install completion
+    with open(rc_file, "a") as f:
+        f.write(f"\n# lgtv shell completion\n{completion_line}\n")
+
+    success(f"Completion installed in {rc_file}")
+    info_msg(f"Restart your shell or run: source {rc_file}")
 
 
 if __name__ == "__main__":
