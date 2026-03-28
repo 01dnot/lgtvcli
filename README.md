@@ -1,6 +1,7 @@
 # LG TV CLI
 
 [![Tests](https://github.com/01dnot/lgtvcli/actions/workflows/test.yml/badge.svg)](https://github.com/01dnot/lgtvcli/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/01dnot/lgtvcli/branch/main/graph/badge.svg)](https://codecov.io/gh/01dnot/lgtvcli)
 [![PyPI version](https://badge.fury.io/py/lgtv-cli.svg)](https://pypi.org/project/lgtv-cli/)
 [![Python versions](https://img.shields.io/pypi/pyversions/lgtv-cli.svg)](https://pypi.org/project/lgtv-cli/)
 
