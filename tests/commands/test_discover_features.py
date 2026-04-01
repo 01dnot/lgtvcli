@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 from lgtv.cli import main
-from lgtv.commands.discover_features import discover_features
 
 
 class TestDiscoverFeatures:

@@ -1,11 +1,8 @@
 """Tests for lgtv.cli module."""
 
-import os
-import pytest
 from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
 
-from lgtv.cli import main, completion, completion_bash, completion_zsh, completion_fish, completion_install
+from lgtv.cli import main
 
 
 class TestMainCommand:

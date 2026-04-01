@@ -2,7 +2,6 @@
 
 import logging
 import os
-import pytest
 from unittest.mock import patch
 
 from lgtv.logging import setup_logging, get_logger
